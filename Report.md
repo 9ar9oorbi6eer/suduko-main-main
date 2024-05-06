@@ -673,25 +673,23 @@ There are 24 valid rows, columns, and subgrids, therefore the solution is invali
 
 ~~~
 
-Detailed Discussion on how Synchronization is acheived when accessing shared resources/ variables and which threads access the shared resources:
+## Detailed Discussion on how Synchronization is acheived when accessing shared resources/ variables and which threads access the shared resources:
 
-Synchronization with with accordance to multithreading refers to the coordination of multiple threads to make sure they access shared resources or critical sections of a code in a controlled manner. If synchronization was not used, then race conditions, data corruption or more unexpected actions could occur. Therfore, i made sure my synchornization was properly implemented.
+Synchronization with accordance to multithreading refers to the coordination of multiple threads to make sure they access shared resources or critical sections of a code in a controlled manner. If synchronization was not used, then race conditions, data corruption or more unexpected actions could occur. Therefore, I made sure my synchornization was properly implemented.
 
 In my case, Synchronization is critical due to multiple threads accessing and modifying shared resources such as 'validRow' 'validCol' 'validSub' and 'Counter', these shared variables will keep the track of the validity of the rows, columns, sub-grids and the count of validated elements. mutex is used to be able to manage synchronization in my code. pthread_mutex_t lock and a condition variable pthread_cond_t cond.
 
-a mutex is used to make sure that once a thrade is updating shared resources no other thread can access them until the mutex is unclocked. this helps in race conditions where multiple threads are trying to access the same shared resources, leading into a corrupt state.
-in my code, each validation function that validates the sudoku, validate_thread1, validate_thread2, validate_thread3, validate_thread4. locks the mutex before updating the shared resources which are: validRow, validCol, validSub, Counter, and then unlocks the mutex immediatley after the update. 
-sample below:
+A mutex is used to make sure that once a thread is updating shared resources no other thread can access them until the mutex is unclocked. This helps in race conditions where multiple threads are trying to access the same shared resources, leading into a corrupt state.
+In my code, each validation function that validates the sudoku (validate_thread1, validate_thread2, validate_thread3,and validate_thread4) locks the mutex before updating the shared resources (validRow, validCol, validSub, and Counter) and then unlocks the mutex immediatley after the update. For example:
 ~~~
 pthread_mutex_lock(&lock);
 // Update shared resources
 pthread_mutex_unlock(&lock);
 ~~~
-by using this pattern, it ensures that each update to the shared resources is completed fully by one thread before the other thread can start, this process is refered to as (atomic)
+By using this pattern, it ensures that each update to the shared resources is fully completed by one thread before the next thread can start This process is refered to as *atomic*.
 
-throughout my code i also implemented the use of a Condition variable, condition variables are important in multithreaded programs as it enables threads to wait for a particular condition to become true before proceeding.
-in my case, the condition variable pthread_cond_t cond is used to synchronize the completion of all threads. the main function located in the mssv.c is used to synchronize the completion of all the 4 threads. the main function will initalize all four threads to validate different parts of the sudoku gird, then it needs to wait until all the 4 threads have completed their tasks before it can proceed to arregate results and print the final validation message, below is a sample of how its handled. firstly each thread sends a signal of its completion by incrementing (completed_threads), then calling the pthread_cond_signal(&cond), inside the locked mutex section. Then, the main function would wait on the condition variable, only when completed_threads is equal to 4 indicating that all 4 threads have been completed.
-sample:
+Throughout my code, I also implemented the use of a Condition variable. These are important in multithreaded programs as it enables threads to wait for a particular condition to become true before proceeding.
+In my case, the condition variable *pthread_cond_t cond* is used to synchronize the completion of all threads. The main function located in the mssv.c file is used to synchronize the completion of all the 4 threads. The main function will initalize all four threads to validate different parts of the sudoku grid. Once all four threads have completed their tasks, it can proceed to aggregate the results and print the final validation message. Below is a sample of how its handled:
 ~~~
 pthread_mutex_lock(&lock);
 while (completed_threads < 4) {
@@ -699,12 +697,12 @@ while (completed_threads < 4) {
 }
 pthread_mutex_unlock(&lock);
 ~~~
-all of the 4 threads: validate_thread1, validate_thread2, validate_thread3, validate_thread4 access and modify the shared arrays of "validRow", "validCol" "validSub" and Counter. they all use mutex to make sure that their updates do not interfere with each other.
-the main thread which is the parent thread located in the main function, waits for all validation threads to complete, aggregates the results, and then prints the final validation message. it uses the condition variable to synchronize on the completion of all validation threads.
+Firstly each thread sends a signal of its completion by incrementing (completed_threads), then calling the pthread_cond_signal(&cond), inside the locked mutex section. Then, the main function would wait on the condition variable, only when completed_threads is equal to 4 indicating that all 4 threads have been completed.all of the 4 threads: validate_thread1, validate_thread2, validate_thread3, validate_thread4 access and modify the shared arrays of "validRow", "validCol" "validSub" and Counter. They all use mutex to make sure that their updates do not interfere with each other.
+The main thread which is the parent thread located in the main function, waits for all validation threads to complete, aggregates the results, and then prints the final validation message. It uses the condition variable to synchronize on the completion of all validation threads.
 
 ## Description of any cases for which your program is not working correctly or how you test your program that makes you believe that works perfectly.
 
-my code runs as expected, i did not notice any logical or actual errors in my code, though i have noticed something very weird that i wasnt able to fix, which were the warnings i got as follows:
+My code runs as expected. I did not notice any logical or actual errors in my code, though I noticed the following warnings:
 ~~~
 mssv.c:29:5: warning: missing initializer for field ‘delay’ of ‘parameters’ [-Wmissing-field-initializers]
    29 |     parameters param2 = {3, 5, delay, 2}; // parameters for thread 2
@@ -725,14 +723,14 @@ mssv.c:31:5: warning: missing initializer for field ‘delay’ of ‘parameters
       |     ^~~~~~~~~~
 
 ~~~
-i have tried fixing these warnings by trying to put the parameters as zeros since i have 5 parameters,this fixes the problem but then the delay stops working properly, therfore i decided to keep my code as it is with everything working but just having the warnings present.
+I have tried fixing these warnings by trying to put the parameters as zeros since I have 5 parameters.This fixes the problem but then the delay stops working properly, therefore I decided to keep my code as it is with everything working but just having the warnings present.
 
-i also believe my code is working properly due to multiple reasons. Reason 1 is due to the same output of the expected output in the assignment specification. when i validate a fully valid sudoku, the results come out as fully valid, and when i try an invlid sudoku my code points out where an error appears and how many valid rows, cols, and sub-grids are available.
-i have created two text files, one text file contains a valid sudoku and the other contains descrepencies, i have tested both text files very carefully and have used online sources to check the validity of the sudokos which in return matched my output which makes me beleive that my code works fine. another reason why i think my code works fine is synchronisation. My code lets me know which thread is outputed last which is supposed to be thread 4, in addition to that, i do not get any segmentation fault or anything wrong with my code that would make me think that a race condition occured.
+I also believe my code is working properly due to multiple reasons. Reason 1 is due to the same output of the expected output in the assignment specification. When I validate a fully valid sudoku, the results come out as fully valid, and when I try an invalid sudoku my code points out where an error appears and how many valid rows, cols, and sub-grids are available.
+I have created two text files, one text file contains a valid sudoku and the other contains descrepencies. I have tested both text files very carefully and have used online sources to check the validity of the sudokos which in return matched my output which makes me believe that my code works. Another reason why I think my code works fine is synchronisation. My code lets me know which thread is outputed last which is supposed to be thread 4. In addition to that, I do not get any segmentation fault or anything wrong with my code that would make me think that a race condition occurred.
 
 ## sample inputs and outputs from your running programs.
 
-after compiling the code, i will be validating the following sudoku, that is placed in the solution.txt text file
+After compiling the code, I will be validating the following sudoku that is placed in the solution.txt text file
 
 ~~~
 6 2 4 5 3 9 1 8 7
@@ -770,13 +768,15 @@ Thread 4: Thread ID-139677161997888-4: valid
 
 There are 27 valid rows, columns, and subgrids, therefore the solution is valid.
 ~~~
-as you can see, my code includes the thread number, the actual thread ID, includes that every thread is valid, includes that thread 4 is the last thread to be executed with the thread ID of it present. My output also includes that there are 27 valid rows, columns and subgrids making the solution valid. (this was the sudoku provided in the assignment)
+As you can see, my code includes the thread number, the actual thread ID, includes that every thread is valid, includes that thread 4 is the last thread to be executed with the thread ID of it present. My output also includes that there are 27 valid rows, columns and subgrids making the solution valid. (this was the sudoku provided in the assignment)
 
 ## checking when the sudoku is invalid
 
-now to make sure that my program will check if a sudoku is invalid, i had to create another testing scenario. in this scenario i will be using this sudoku which is placed in the invalid.txt file.:
+Now to make sure that my program will check if a sudoku is invalid, I had to create another testing scenario. In this scenario I will be using this sudoku which is placed in the invalid.txt file.:
 
 input: 
+
+** number ** = changed number
 
 ./mssv invalid.txt 5
 ~~~
@@ -788,7 +788,7 @@ input:
 7 6 2 3 9 1 4 5 8
 3 7 1 9 5 6 8 4 2
 4 9 6 1 8 2 5 7 3
-2 8 5 4 7 3 9 1 3
+2 8 5 4 7 3 9 1 *3*
 ~~~
 output:
 ~~~
@@ -813,24 +813,29 @@ Thread 4: Thread ID-140650043393600-4: column 9 is invalid
 There are 24 valid rows, columns, and subgrids, therefore the solution is invalid.
 ~~~
 
-as you can see, column 9 has a duplicate 3, this means that there is an invalid sudoku, proof: 27 - 1 invalid row (row 9) - 1 invalid column (column 9) - 1 invalid subgrid (subgrid 9) = 24 valid rows, columns and subgrids making the soltuion invalid. my code has correctly identified that row 9 is invalid, sub-grid 9 is invalid and that column 9 is invalid, therfore making the solution invalid.
+As you can see, column 9 has a duplicate 3, this means that there is an invalid sudoku.
+proof: 27 - 1 invalid row (row 9) - 1 invalid column (column 9) - 1 invalid subgrid (subgrid 9) = 24 valid rows, columns and subgrids making the soltuion invalid. 
+My code has correctly identified that row 9 is invalid, sub-grid 9 is invalid and that column 9 is invalid, therefore making the solution invalid.
 
 
 ## final test for invalid sudoku
 
-even though, my code was able to find the error in the invalid sudoku, i wanted to go for a tougher test to make sure that it can accurately identify the invalid rows, cols and subgrids and the valid ones. i decided to make sure that every thread was able to identify that there is an invalid row, or col, or sub-grid or all together, therfore i came with this invalid sudoku:
+While my code was able to find the error in the invalid sudoku, I wanted to go for a more thorough test to make sure that it can accurately identify the invalid rows, cols and subgrids and the valid ones. I decided to make sure that every thread was able to identify that there is an invalid row, or col, or sub-grid or all together, therefore I created  this invalid sudoku:
 
 ~~~
 6 2 4 5 3 9 1 8 7
-6 1 9 7 2 8 6 3 4
+*6* 1 9 7 2 8 6 3 4
 8 3 7 6 1 4 2 9 5
-8 4 3 8 6 5 7 2 9
+*8* 4 3 8 6 5 7 2 9
 9 5 8 2 4 7 3 6 1
 7 6 2 3 9 1 4 5 8
 3 7 1 9 5 6 8 4 2
 4 9 6 1 8 2 5 7 3
-2 8 5 4 7 3 9 1 3
+2 8 5 4 7 3 9 1 *3*  
 ~~~
+
+** number ** = changed number
+
 
 input: ./mssv invalid.txt 5
 
@@ -857,4 +862,4 @@ Thread 4: Thread ID-140434816878144-4: column 1 is invalid, column 9 is invalid
 There are 19 valid rows, columns, and subgrids, therefore the solution is invalid.
 ~~~
 
-as you can see my code has accurately identified the issues with the sudoku, it was able to identify that each thread had a mistake, proof: 27 - 3 invalid subgrids, - 3 invalid rows - 2 invalid columns giving me a total of 19 valid rows, cols, and sub-grids therfore making the solution invalid, and therfore, making my validator accurate
+As you can see my code has accurately identified the issues with the sudoku. It was able to identify that each thread had a mistake. proof: 27 - 3 invalid subgrids, - 3 invalid rows - 2 invalid columns giving me a total of 19 valid rows, cols, and sub-grids therefore making the solution invalid, and therefore, making my validator accurate.
