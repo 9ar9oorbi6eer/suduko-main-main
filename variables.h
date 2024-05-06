@@ -23,9 +23,8 @@ typedef struct {
     int end_row;
     int start_col;
     int end_col;
-    // int thread_num;
     int delay;
-    // int thread_number;
+    int thread_num;
 } parameters;
 
 

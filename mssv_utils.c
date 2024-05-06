@@ -13,7 +13,7 @@
 // parameter argc = number of command line args
 // parameter argv = array of command line args string
 // parameter delay = pointer to an integer to set the delay
-void check_arguments(int argc, char *argv[], int *delay) 
+int check_arguments(int argc, char *argv[], int *delay) 
 {
     if (argc != 3) 
     {
@@ -29,11 +29,12 @@ void check_arguments(int argc, char *argv[], int *delay)
     }
 
     printf("Delay set to: %d seconds\n", *delay);
+    return 0;
 }
 // this function initalizes an array of strong messages to hold validation results
 // it allocated memory for each message and exits the program if the allocation fails
 // the paramter stat_messages = pointer to an array of strings for status messages
-void initialize_stat_messages(char **stat_messages) 
+int initialize_stat_messages(char **stat_messages) 
 {
     for (int i = 0; i < 4; i++) 
     {
@@ -44,6 +45,7 @@ void initialize_stat_messages(char **stat_messages)
             return 1;
         }
     }
+    return 0;
 }
 // this function processes and appends validation results to status messages for rows, cols and sub-grids
 // the parameter stat_messages = array of strings where validation messages are stored

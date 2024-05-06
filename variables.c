@@ -8,6 +8,8 @@ int validCol[GRID_SIZE];
 int validSub[GRID_SIZE];
 int Counter = 0;
 
+
+
 // lock mutex
 pthread_mutex_t lock;
 

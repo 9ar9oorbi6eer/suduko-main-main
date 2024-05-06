@@ -701,3 +701,160 @@ pthread_mutex_unlock(&lock);
 ~~~
 all of the 4 threads: validate_thread1, validate_thread2, validate_thread3, validate_thread4 access and modify the shared arrays of "validRow", "validCol" "validSub" and Counter. they all use mutex to make sure that their updates do not interfere with each other.
 the main thread which is the parent thread located in the main function, waits for all validation threads to complete, aggregates the results, and then prints the final validation message. it uses the condition variable to synchronize on the completion of all validation threads.
+
+## Description of any cases for which your program is not working correctly or how you test your program that makes you believe that works perfectly.
+
+my code runs as expected, i did not notice any logical or actual errors in my code, though i have noticed something very weird that i wasnt able to fix, which were the warnings i got as follows:
+~~~
+mssv.c:29:5: warning: missing initializer for field ‘delay’ of ‘parameters’ [-Wmissing-field-initializers]
+   29 |     parameters param2 = {3, 5, delay, 2}; // parameters for thread 2
+      |     ^~~~~~~~~~
+In file included from mssv.c:7:
+variables.h:26:9: note: ‘delay’ declared here
+   26 |     int delay;
+      |         ^~~~~
+mssv.c:30:5: warning: missing initializer for field ‘delay’ of ‘parameters’ [-Wmissing-field-initializers]
+   30 |     parameters param3 = {6, 8, delay, 3}; // parameters for thread 3
+      |     ^~~~~~~~~~
+In file included from mssv.c:7:
+variables.h:26:9: note: ‘delay’ declared here
+   26 |     int delay;
+      |         ^~~~~
+mssv.c:31:5: warning: missing initializer for field ‘delay’ of ‘parameters’ [-Wmissing-field-initializers]
+   31 |     parameters param4 = {0, 8, delay, 4}; // parameters for thread 4
+      |     ^~~~~~~~~~
+
+~~~
+i have tried fixing these warnings by trying to put the parameters as zeros since i have 5 parameters,this fixes the problem but then the delay stops working properly, therfore i decided to keep my code as it is with everything working but just having the warnings present.
+
+i also believe my code is working properly due to multiple reasons. Reason 1 is due to the same output of the expected output in the assignment specification. when i validate a fully valid sudoku, the results come out as fully valid, and when i try an invlid sudoku my code points out where an error appears and how many valid rows, cols, and sub-grids are available.
+i have created two text files, one text file contains a valid sudoku and the other contains descrepencies, i have tested both text files very carefully and have used online sources to check the validity of the sudokos which in return matched my output which makes me beleive that my code works fine. another reason why i think my code works fine is synchronisation. My code lets me know which thread is outputed last which is supposed to be thread 4, in addition to that, i do not get any segmentation fault or anything wrong with my code that would make me think that a race condition occured.
+
+## sample inputs and outputs from your running programs.
+
+after compiling the code, i will be validating the following sudoku, that is placed in the solution.txt text file
+
+~~~
+6 2 4 5 3 9 1 8 7
+5 1 9 7 2 8 6 3 4
+8 3 7 6 1 4 2 9 5
+1 4 3 8 6 5 7 2 9
+9 5 8 2 4 7 3 6 1
+7 6 2 3 9 1 4 5 8
+3 7 1 9 5 6 8 4 2
+4 9 6 1 8 2 5 7 3
+2 8 5 4 7 3 9 1 6
+~~~
+
+compile: make
+
+run the code: ./mssv solution.txt 5
+
+output: 
+~~~
+Delay set to: 5 seconds
+Thread ID-139677161997888-4 is the last thread.
+
+
+Thread 1: Thread ID-139677187176000-1: valid
+
+
+Thread 2: Thread ID-139677178783296-2: valid
+
+
+Thread 3: Thread ID-139677170390592-3: valid
+
+
+Thread 4: Thread ID-139677161997888-4: valid
+
+
+There are 27 valid rows, columns, and subgrids, therefore the solution is valid.
+~~~
+as you can see, my code includes the thread number, the actual thread ID, includes that every thread is valid, includes that thread 4 is the last thread to be executed with the thread ID of it present. My output also includes that there are 27 valid rows, columns and subgrids making the solution valid. (this was the sudoku provided in the assignment)
+
+## checking when the sudoku is invalid
+
+now to make sure that my program will check if a sudoku is invalid, i had to create another testing scenario. in this scenario i will be using this sudoku which is placed in the invalid.txt file.:
+
+input: 
+
+./mssv invalid.txt 5
+~~~
+6 2 4 5 3 9 1 8 7
+5 1 9 7 2 8 6 3 4
+8 3 7 6 1 4 2 9 5
+1 4 3 8 6 5 7 2 9
+9 5 8 2 4 7 3 6 1
+7 6 2 3 9 1 4 5 8
+3 7 1 9 5 6 8 4 2
+4 9 6 1 8 2 5 7 3
+2 8 5 4 7 3 9 1 3
+~~~
+output:
+~~~
+Delay set to: 5 seconds
+
+
+Thread ID-140650043393600-4 is the last thread.
+
+
+Thread 1: Thread ID-140650068571712-1: valid
+
+
+Thread 2: Thread ID-140650060179008-2: valid
+
+
+Thread 3: Thread ID-140650051786304-3: row 9 is invalid, sub-grid 9 is invalid
+
+
+Thread 4: Thread ID-140650043393600-4: column 9 is invalid
+
+
+There are 24 valid rows, columns, and subgrids, therefore the solution is invalid.
+~~~
+
+as you can see, column 9 has a duplicate 3, this means that there is an invalid sudoku, proof: 27 - 1 invalid row (row 9) - 1 invalid column (column 9) - 1 invalid subgrid (subgrid 9) = 24 valid rows, columns and subgrids making the soltuion invalid. my code has correctly identified that row 9 is invalid, sub-grid 9 is invalid and that column 9 is invalid, therfore making the solution invalid.
+
+
+## final test for invalid sudoku
+
+even though, my code was able to find the error in the invalid sudoku, i wanted to go for a tougher test to make sure that it can accurately identify the invalid rows, cols and subgrids and the valid ones. i decided to make sure that every thread was able to identify that there is an invalid row, or col, or sub-grid or all together, therfore i came with this invalid sudoku:
+
+~~~
+6 2 4 5 3 9 1 8 7
+6 1 9 7 2 8 6 3 4
+8 3 7 6 1 4 2 9 5
+8 4 3 8 6 5 7 2 9
+9 5 8 2 4 7 3 6 1
+7 6 2 3 9 1 4 5 8
+3 7 1 9 5 6 8 4 2
+4 9 6 1 8 2 5 7 3
+2 8 5 4 7 3 9 1 3
+~~~
+
+input: ./mssv invalid.txt 5
+
+output:
+~~~
+Delay set to: 5 seconds
+
+
+Thread ID-140434816878144-4 is the last thread.
+
+
+Thread 1: Thread ID-140434842056256-1: sub-grid 1 is invalid, row 2 is invalid
+
+
+Thread 2: Thread ID-140434833663552-2: row 4 is invalid, sub-grid 4 is invalid
+
+
+Thread 3: Thread ID-140434825270848-3: row 9 is invalid, sub-grid 9 is invalid
+
+
+Thread 4: Thread ID-140434816878144-4: column 1 is invalid, column 9 is invalid
+
+
+There are 19 valid rows, columns, and subgrids, therefore the solution is invalid.
+~~~
+
+as you can see my code has accurately identified the issues with the sudoku, it was able to identify that each thread had a mistake, proof: 27 - 3 invalid subgrids, - 3 invalid rows - 2 invalid columns giving me a total of 19 valid rows, cols, and sub-grids therfore making the solution invalid, and therfore, making my validator accurate
