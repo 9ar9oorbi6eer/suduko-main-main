@@ -6,6 +6,7 @@ extern pthread_t last_thread_id;
 // Thread 1
 // Thread function to validate rows 1-3 and sub-grids 1-3 in the soduku solution file
 // it works by validating the rows and sub-grids specificed by 'parameters'
+
 void *validate_thread1(void *args) 
 {
     parameters *param = (parameters *)args;
@@ -58,7 +59,11 @@ void *validate_thread1(void *args)
     // signal thread parent about completion of this thread's task
     pthread_mutex_lock(&lock);
     completed_threads++;
-    last_thread_id = pthread_self();  
+    // This ensures it's the last thread completing
+    if (completed_threads == 4) 
+    {  
+        last_thread_id = pthread_self();
+    }
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&lock);
 
@@ -122,7 +127,11 @@ void *validate_thread2(void *args)
     // signal thread parent about the completion of this Thread's task
     pthread_mutex_lock(&lock);
     completed_threads++;
-    last_thread_id = pthread_self();  
+    // This ensures it's the last thread completing
+    if (completed_threads == 4) 
+    { 
+        last_thread_id = pthread_self();
+    }
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&lock);
 
@@ -187,7 +196,11 @@ void *validate_thread3(void *args)
     // signal thread parent to let parent thread know that this thread completed its task
     pthread_mutex_lock(&lock);
     completed_threads++;
-    last_thread_id = pthread_self();  
+    // This ensures it's the last thread completing
+    if (completed_threads == 4) 
+    {  
+        last_thread_id = pthread_self();
+    }
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&lock);
 
@@ -224,13 +237,14 @@ void *validate_thread4(void *args)
         sleep(delay);  
 
     }
-    // signal thread parent
     pthread_mutex_lock(&lock);
     completed_threads++;
-    last_thread_id = pthread_self();  
+    if (completed_threads == 4) 
+    { 
+        last_thread_id = pthread_self();
+    }
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&lock);
-
 
     return NULL;
 }

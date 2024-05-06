@@ -1,0 +1,51 @@
+Author name: Zaid Rushdi Khalaf
+Student number: 21467385
+Date: 06/05/24
+
+project name: Sudoku Validator
+description: this program has been created using multithreads in order to validate a given sudoku file called solution.txt, the main objective was to create 4 threads, each thread was given a certain task to complete. threads 1-3 were responsible of validating 3 rows and 3 sub-grids and thread 4 was responsible of validating all the rows of the sudoku. A parent thread located in the main file (mssv.c) is responsible of making it all work together.
+
+table of contents:
+C files:
+mssv.c: is my main file and includes my main function that makes everything work
+
+threads.c: includes all the threads that are required to validate the sudoku in addition to some validating messages
+
+variables.c: includes variable declerations and FILE I/O
+
+mssv_utils.c: includes all the functions that simplified the main file and made the code more readable
+
+Header files .h
+threads.h
+
+variables.h
+
+mssv_utils.h
+
+Makefile
+
+
+Head to the Cli:
+Usage: clear all object files (make clear)
+compile the code: make
+enter the following input: ./mssv solution.txt 1 (the number at the end is the delay, you can choose any number you want) it is prefered to choose a higher number which equals a higher delay, the reason behind that is that it will help identify any synchronisation issues
+
+you should be presented with an output like this:
+Delay set to: 1 seconds
+Thread ID-140455188612672-4 is the last thread.
+Thread 1: Thread ID-140455213790784-1: valid
+Thread 2: Thread ID-140455205398080-2: valid
+Thread 3: Thread ID-140455197005376-3: valid
+Thread 4: Thread ID-140455188612672-4: valid
+There are 27 valid rows, columns, and subgrids, therefore the solution is valid.
+
+you can also try to check an invalid sudoku, by including the invalid.txt file and you should be presented with an output as follows: ps: feel free to change invalid.txt to your desire in order to check the validator with as many invalid sudoku's as you wish
+
+Delay set to: 4 seconds
+Thread ID-140029057812032-4 is the last thread.
+Thread 1: Thread ID-140029082990144-1: valid
+Thread 2: Thread ID-140029074597440-2: valid
+Thread 3: Thread ID-140029066204736-3: row 9 is invalid, sub-grid 9 is invalid
+Thread 4: Thread ID-140029057812032-4: column 9 is invalid
+There are 24 valid rows, columns, and subgrids, therefore the solution is invalid.
+
