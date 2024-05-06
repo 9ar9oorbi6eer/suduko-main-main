@@ -673,4 +673,31 @@ There are 24 valid rows, columns, and subgrids, therefore the solution is invali
 
 ~~~
 
-Detailed Discussion on how Synchronization is acheived when accessing shared resources/ variables and which threads access the shared resources
+Detailed Discussion on how Synchronization is acheived when accessing shared resources/ variables and which threads access the shared resources:
+
+Synchronization with with accordance to multithreading refers to the coordination of multiple threads to make sure they access shared resources or critical sections of a code in a controlled manner. If synchronization was not used, then race conditions, data corruption or more unexpected actions could occur. Therfore, i made sure my synchornization was properly implemented.
+
+In my case, Synchronization is critical due to multiple threads accessing and modifying shared resources such as 'validRow' 'validCol' 'validSub' and 'Counter', these shared variables will keep the track of the validity of the rows, columns, sub-grids and the count of validated elements. mutex is used to be able to manage synchronization in my code. pthread_mutex_t lock and a condition variable pthread_cond_t cond.
+
+a mutex is used to make sure that once a thrade is updating shared resources no other thread can access them until the mutex is unclocked. this helps in race conditions where multiple threads are trying to access the same shared resources, leading into a corrupt state.
+in my code, each validation function that validates the sudoku, validate_thread1, validate_thread2, validate_thread3, validate_thread4. locks the mutex before updating the shared resources which are: validRow, validCol, validSub, Counter, and then unlocks the mutex immediatley after the update. 
+sample below:
+~~~
+pthread_mutex_lock(&lock);
+// Update shared resources
+pthread_mutex_unlock(&lock);
+~~~
+by using this pattern, it ensures that each update to the shared resources is completed fully by one thread before the other thread can start, this process is refered to as (atomic)
+
+throughout my code i also implemented the use of a Condition variable, condition variables are important in multithreaded programs as it enables threads to wait for a particular condition to become true before proceeding.
+in my case, the condition variable pthread_cond_t cond is used to synchronize the completion of all threads. the main function located in the mssv.c is used to synchronize the completion of all the 4 threads. the main function will initalize all four threads to validate different parts of the sudoku gird, then it needs to wait until all the 4 threads have completed their tasks before it can proceed to arregate results and print the final validation message, below is a sample of how its handled. firstly each thread sends a signal of its completion by incrementing (completed_threads), then calling the pthread_cond_signal(&cond), inside the locked mutex section. Then, the main function would wait on the condition variable, only when completed_threads is equal to 4 indicating that all 4 threads have been completed.
+sample:
+~~~
+pthread_mutex_lock(&lock);
+while (completed_threads < 4) {
+    pthread_cond_wait(&cond, &lock); // Wait for all threads to signal completion
+}
+pthread_mutex_unlock(&lock);
+~~~
+all of the 4 threads: validate_thread1, validate_thread2, validate_thread3, validate_thread4 access and modify the shared arrays of "validRow", "validCol" "validSub" and Counter. they all use mutex to make sure that their updates do not interfere with each other.
+the main thread which is the parent thread located in the main function, waits for all validation threads to complete, aggregates the results, and then prints the final validation message. it uses the condition variable to synchronize on the completion of all validation threads.
