@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "threads.h": "c",
+        "variables.h": "c",
+        "string.h": "c"
+    }
+}
